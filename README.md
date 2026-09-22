@@ -20,30 +20,25 @@ Makefile                   make test | make play
 
 Classic **top-seed spacetime** (Rule 30 triangle), **BW** (`#` / space), tip at top.
 
-**Default (Linux Mint safe):** evolve fully, then print **exactly one** frame.
-No cursor/clear escapes — avoids the stacked-scroll dump when the terminal
-ignores `ESC[H` / `ESC[2J`.
+**Default:** live animation at **16 generations** (`clear` before each frame).
 
 ```bash
-make play              # 50 gens, one final picture
-make play GEN=80       # 80 gens
-./bin/play 30          # same
+make play              # live, 16 gens
+make play GEN=40       # live, 40 gens
+make live              # same as play
+./bin/play             # live, 16 gens
+./bin/play 30          # live, 30 gens
 ```
 
-**Optional animation** (only if your TTY honors clear/home):
+**Single frame** (no animation):
 
 ```bash
-make live
-make live GEN=40
-make play LIVE=1
-./bin/play 40 --live
+make once
+make play ONCE=1
+./bin/play --once
 ```
 
-`--live` clears the terminal with the system `clear` command before each
-frame (ANSI clear alone is ignored on some Linux Mint setups).
-
-Do **not** write `make run --live` — GNU make treats `--live` as its own
-option and never starts `play`.
+Do **not** write `make run --live` as a make flag — use `make play` / `make live` (live is already default), or `./bin/play --live`.
 
 ```bash
 make play LIVE=1

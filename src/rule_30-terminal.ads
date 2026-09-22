@@ -3,7 +3,7 @@
 package Rule_30.Terminal is
 
    Width           : constant Positive := 50;
-   Default_Gens    : constant Positive := 50;
+   Default_Gens    : constant Positive := 16;
    Max_Gens        : constant Positive := 200;
    Msg_Inner_Width : constant Positive := 48;
    Frame_Width     : constant Positive := 50;

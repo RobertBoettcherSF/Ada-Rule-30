@@ -2,13 +2,12 @@ GNAT    := gnatmake
 FLAGS   := -gnatwa -gnat2022 -gnata
 OBJ_DIR := obj
 BIN_DIR := bin
-# Generations: make play GEN=80
+# Generations: make play GEN=40  (default 16)
 GEN     ?=
-# Animation: make play LIVE=1   OR   make live
-# (Do NOT use: make play --live  — that is a make flag, not ours.)
-LIVE    ?=
+# ONCE=1 → single frame, no animation
+ONCE    ?=
 
-.PHONY: all test play run live clean
+.PHONY: all test play run live once clean
 
 all: $(BIN_DIR)/tests $(BIN_DIR)/play
 
@@ -23,17 +22,17 @@ $(BIN_DIR)/play: src/*.ads src/*.adb src/play.adb
 test: $(BIN_DIR)/tests
 	$(BIN_DIR)/tests
 
-# Default: one clean final frame (Linux Mint safe).
-play run: $(BIN_DIR)/play
-ifeq ($(LIVE),1)
-	$(BIN_DIR)/play $(GEN) --live
+# Default: live animation, 16 generations (override with GEN=).
+play run live: $(BIN_DIR)/play
+ifeq ($(ONCE),1)
+	$(BIN_DIR)/play $(GEN) --once
 else
-	$(BIN_DIR)/play $(GEN)
+	$(BIN_DIR)/play $(GEN) --live
 endif
 
-# Convenience: make live   /   make live GEN=40
-live: $(BIN_DIR)/play
-	$(BIN_DIR)/play $(GEN) --live
+# Single final frame (no clear / no animation).
+once: $(BIN_DIR)/play
+	$(BIN_DIR)/play $(GEN) --once
 
 clean:
 	rm -rf $(OBJ_DIR) $(BIN_DIR)

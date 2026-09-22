@@ -66,7 +66,7 @@ package body Rule_30.Terminal is
             & "          RULE  30"));
       Append_Line
         (Msg_Line
-           ("BW  play [N] [--live]  N=1.." & Trim_Nat (Max_Gens)
+           ("BW  play [N] [--once|--live]  N=1.." & Trim_Nat (Max_Gens)
             & "  default=" & Trim_Nat (Default_Gens)));
       Append_Line (Border_Line);
       return Buf (1 .. Last);

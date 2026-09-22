@@ -13,7 +13,7 @@ with Rule_30;           use Rule_30;
 with Rule_30.Terminal;  use Rule_30.Terminal;
 
 procedure Play is
-   Live      : Boolean := False;
+   Live      : Boolean := True;  -- default: animate
    Show_Help : Boolean := False;
    Gens_Arg  : Natural := 0;
 
@@ -72,9 +72,10 @@ begin
       Put_Line ("usage: play [generations] [--live]");
       Put_Line ("  generations  1 .." & Max_Gens'Image
                 & "  (default" & Default_Gens'Image & ")");
-      Put_Line ("  (default)    print one final frame (Mint-safe)");
-      Put_Line ("  --live       animate: run clear(1) before each frame");
-      Put_Line ("make live / make live GEN=40 / make play LIVE=1");
+      Put_Line ("  (default)    --live at" & Default_Gens'Image & " gens (clear each frame)");
+      Put_Line ("  --live       animate (default)");
+      Put_Line ("  --once       single final frame, no clear (no animation)");
+      Put_Line ("make play / make play GEN=40 / make once");
       return;
    end if;
 
@@ -137,7 +138,7 @@ begin
          end loop;
          New_Line;
          Put_Line ("done —" & Generations'Image
-                   & " generations (--live via clear).");
+                   & " generations (live via clear).");
       else
          for Step in 1 .. Generations loop
             Evolve_Fixed_Zero (Current);
@@ -155,7 +156,7 @@ begin
             Put_Frame (S);
          end;
          Put_Line ("done —" & Generations'Image
-                   & " generations (single frame; make live to animate).");
+                   & " generations (--once single frame).");
       end if;
    end;
 end Play;
