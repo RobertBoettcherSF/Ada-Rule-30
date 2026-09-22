@@ -39,6 +39,9 @@ make play LIVE=1
 ./bin/play 40 --live
 ```
 
+`--live` clears the terminal with the system `clear` command before each
+frame (ANSI clear alone is ignored on some Linux Mint setups).
+
 Do **not** write `make run --live` — GNU make treats `--live` as its own
 option and never starts `play`.
 
