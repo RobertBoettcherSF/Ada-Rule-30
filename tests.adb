@@ -38,7 +38,7 @@ begin
    --  TEST 4 — Evolve_Fixed_Zero Normal Case (Functional Correctness)
    Put_Line ("TEST 4 — Evolve_Fixed_Zero Normal Case");
    declare
-      Grid : State_Array (1 .. 3) := (1, 1, 1);
+      Grid : State_Array (1 .. 3) := [1, 1, 1];
    begin
       Evolve_Fixed_Zero (Grid);
       Check ("4.1 Left bound (011 -> 1)", Grid (1) = 1);
@@ -49,7 +49,7 @@ begin
    --  TEST 5 — Evolve_Fixed_Zero Edges Zeros (Edge Cases)
    Put_Line ("TEST 5 — Evolve_Fixed_Zero with Zeros");
    declare
-      Grid : State_Array (1 .. 3) := (0, 0, 0);
+      Grid : State_Array (1 .. 3) := [0, 0, 0];
    begin
       Evolve_Fixed_Zero (Grid);
       Check ("5.1 Left 000 -> 0", Grid (1) = 0);
@@ -60,7 +60,7 @@ begin
    --  TEST 6 — Evolve_Periodic Shift Wrap (Functional Correctness)
    Put_Line ("TEST 6 — Evolve_Periodic Shift Wrap");
    declare
-      Grid : State_Array (1 .. 3) := (1, 0, 0);
+      Grid : State_Array (1 .. 3) := [1, 0, 0];
    begin
       Evolve_Periodic (Grid);
       --  Index 1: Wrap L=0, C=1, R=0 => 010 -> 1
@@ -74,7 +74,7 @@ begin
    --  TEST 7 — Evolve_Periodic Single Cell Wrap (Edge Cases)
    Put_Line ("TEST 7 — Evolve_Periodic Single Cell Case");
    declare
-      Grid : State_Array (1 .. 1) := (1 => 1);
+      Grid : State_Array (1 .. 1) := [1 => 1];
    begin
       Evolve_Periodic (Grid);
       Check ("7.1 Single cell initialization (Setup check)", True);
@@ -87,7 +87,7 @@ begin
    --  TEST 8 — Evolve_Expanding Step 1 (Functional Correctness)
    Put_Line ("TEST 8 — Evolve_Expanding Step 1");
    declare
-      Grid : State_Array (1 .. 1) := (1 => 1);
+      Grid : constant State_Array (1 .. 1) := [1 => 1];
       Res  : constant State_Array := Evolve_Expanding (Grid);
    begin
       Check ("8.1 Expanding length strictly +2", Res'Length = 3);
@@ -99,7 +99,7 @@ begin
    --  TEST 9 — Evolve_Expanding Step 2 (Functional Correctness)
    Put_Line ("TEST 9 — Evolve_Expanding Step 2");
    declare
-      Grid : State_Array (0 .. 2) := (1, 1, 1);
+      Grid : constant State_Array (0 .. 2) := [1, 1, 1];
       Res  : constant State_Array := Evolve_Expanding (Grid);
    begin
       --  Expanding generation translates (1,1,1) into (1,1,0,0,1)
@@ -112,7 +112,7 @@ begin
    --  TEST 10 — Evolve_And_Extract_Center Valid (Functional Correctness)
    Put_Line ("TEST 10 — Evolve_And_Extract_Center Normal Case");
    declare
-      Grid    : State_Array (1 .. 3) := (1, 0, 1);
+      Grid    : State_Array (1 .. 3) := [1, 0, 1];
       Bit_Val : Bit := 0;
    begin
       Evolve_And_Extract_Center (Grid, Bit_Val);
@@ -144,9 +144,14 @@ begin
       Caught_Exp, Caught_Per : Boolean := False;
    begin
       begin
-         if Evolve_Expanding (Grid)'Length > 0 then
+         declare
+            -- Force function evaluation using a locally scoped dummy variable 
+            -- rather than an empty 'if' statement to satisfy compiler warnings.
+            Dummy : constant State_Array := Evolve_Expanding (Grid);
+            pragma Unreferenced (Dummy);
+         begin
             null;
-         end if;
+         end;
       exception
          when Invalid_Grid => Caught_Exp := True;
       end;
@@ -165,7 +170,7 @@ begin
    --  TEST 13 — Evolve_And_Extract_Center Even/Empty Exception (Error Handling)
    Put_Line ("TEST 13 — Evolve_And_Extract Even/Empty Exceptions");
    declare
-      Grid_Even    : State_Array (1 .. 2) := (1, 1);
+      Grid_Even    : State_Array (1 .. 2) := [1, 1];
       Grid_Empty   : State_Array (1 .. 0);
       Bit_Val      : Bit := 0;
       Caught_Even  : Boolean := False;
@@ -191,7 +196,7 @@ begin
    --  TEST 14 — True Rule 30 PRNG Sequence (Invariants)
    Put_Line ("TEST 14 — Verify Core Wolfram Structural Invariants");
    declare
-      G0 : State_Array (0 .. 0) := (0 => 1);
+      G0 : constant State_Array (0 .. 0) := [0 => 1];
    begin
       Check ("14.1 Gen 0 sequence invariant validates", G0 (0) = 1);
       
