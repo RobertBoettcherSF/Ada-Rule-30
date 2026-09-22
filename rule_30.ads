@@ -7,6 +7,7 @@ package Rule_30 is
    
    --  A 1D grid representing a single generation of the cellular automaton.
    type State_Array is array (Integer range <>) of Bit;
+   pragma Pack (State_Array);
    
    Invalid_Grid : exception;
    --  Raised if the provided grid array has a length of 0.
