@@ -8,7 +8,7 @@ pragma Ada_2022;
 with Ada.Text_IO;       use Ada.Text_IO;
 with Ada.Command_Line;  use Ada.Command_Line;
 with Ada.Calendar;
-with Interfaces.C;
+with Interfaces.C; use Interfaces.C;
 with Rule_30;           use Rule_30;
 with Rule_30.Terminal;  use Rule_30.Terminal;
 
