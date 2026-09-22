@@ -3,4 +3,9 @@ project Rule_30 is
    for Object_Dir  use "obj";
    for Exec_Dir    use "bin";
    for Main        use ("tests.adb");
+
+   package Compiler is
+      --  Enforce Ada 2012, enable assertions/contracts, enable warnings, and optimize
+      for Default_Switches ("Ada") use ("-gnat2012", "-gnata", "-gnatwa", "-O2");
+   end Compiler;
 end Rule_30;
