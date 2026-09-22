@@ -2,8 +2,8 @@ GNAT    := gnatmake
 FLAGS   := -gnatwa -gnat2022 -gnata
 OBJ_DIR := obj
 BIN_DIR := bin
-# Optional: make play GEN=80
 GEN     ?=
+LIVE    ?=
 
 .PHONY: all test play run clean
 
@@ -21,7 +21,11 @@ test: $(BIN_DIR)/tests
 	$(BIN_DIR)/tests
 
 play run: $(BIN_DIR)/play
+ifeq ($(LIVE),1)
+	$(BIN_DIR)/play $(GEN) --live
+else
 	$(BIN_DIR)/play $(GEN)
+endif
 
 clean:
 	rm -rf $(OBJ_DIR) $(BIN_DIR)

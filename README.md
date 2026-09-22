@@ -7,42 +7,55 @@ Cells are `Bit is mod 2`. Neighborhood `(P, Q, R)` updates as `P XOR (Q OR R)` (
 ## Layout
 
 ```
-src/rule_30.ads   public API
-src/rule_30.adb   evolve variants
-src/play.adb      terminal demo (BW spacetime + message box)
-tests/tests.adb   unit tests
-Makefile          make test | make play
+src/rule_30.ads            public API
+src/rule_30.adb            evolve variants
+src/rule_30-terminal.ads   clean frame renderer (no ANSI)
+src/rule_30-terminal.adb
+src/play.adb               terminal demo
+tests/tests.adb            unit tests (incl. frame overwrite guards)
+Makefile                   make test | make play
 ```
 
 ## Terminal (`make play`)
 
-Classic **top-seed spacetime** (Rule 30 triangle):
+Classic **top-seed spacetime** (Rule 30 triangle), **BW** (`#` / space), tip at top.
 
-- Row 1 = generation 0 (single center seed — tip never scrolls away)
-- Later generations grow **downward**
-- **50 columns**, **BW** only (`#` live, space empty)
-- No cell colors, no scale/slider
-
-**Redraw (Linux Mint):** each frame homes the cursor, overwrites the whole
-frame with spaces, then paints again — so glyphs do not stack when the
-terminal ignores clear-screen.
-
-**Generations** (default 50, max 200):
+**Default (Linux Mint safe):** evolve fully, then print **exactly one** frame.
+No cursor/clear escapes — avoids the stacked-scroll dump when the terminal
+ignores `ESC[H` / `ESC[2J`.
 
 ```bash
-make play           # 50 gens
-make play GEN=80    # 80 gens
-./bin/play 30       # same
+make play              # 50 gens, one final picture
+make play GEN=80       # 80 gens
+./bin/play 30          # same
 ```
 
-Message box (outer width 50, inner text 48):
+**Optional animation** (only if your TTY honors clear/home):
+
+```bash
+make play LIVE=1
+make play GEN=40 LIVE=1
+./bin/play 40 --live
+```
+
+Message box (width 50):
 
 ```
 ##################################################
-#CURRENT GEN  12 / 50          RULE  30          #
-#BW  play [N]  N=1..200  default=50              #
+#CURRENT GEN  50 / 50          RULE  30          #
+#BW  play [N] [--live]  N=1..200  default=50     #
 ##################################################
 ```
+
+## Tests
+
+`make test` includes **TEST 15** for the terminal renderer:
+
+- frame has **no ESC**
+- every line is width 50
+- gen-0 tip is a single center `#`
+- tip survives after evolve
+- re-render equals overwrite (not a stacked concat)
 
 ## API (`src/rule_30.ads`)
 
@@ -50,18 +63,8 @@ Message box (outer width 50, inner text 48):
 |-----------|----------|
 | `Evolve_Fixed_Zero` | Outside cells are `0` |
 | `Evolve_Periodic` | Torus wrap (left↔right) |
-| `Evolve_Expanding` | Grow one cell each side into a zero background (`Length + 2`) |
-| `Evolve_And_Extract_Center` | One evolve step, then return the center bit (odd-length grid required) |
-
-Empty grids raise `Invalid_Grid`.
-
-## Build
-
-```bash
-make test
-make play
-make play GEN=80
-```
+| `Evolve_Expanding` | Grow one cell each side (`Length + 2`) |
+| `Evolve_And_Extract_Center` | One step, return center bit |
 
 ## License
 

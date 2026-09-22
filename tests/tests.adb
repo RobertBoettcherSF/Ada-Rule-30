@@ -1,5 +1,6 @@
 with Ada.Text_IO; use Ada.Text_IO;
 with Rule_30;     use Rule_30;
+with Rule_30.Terminal;
 
 procedure Tests is
    Pass_Count : Natural := 0;
@@ -208,6 +209,111 @@ begin
             G2 : constant State_Array := Evolve_Expanding (G1);
          begin
             Check ("14.3 Gen 2 structural sequence verifies at 0", G2 (0) = 0);
+         end;
+      end;
+   end;
+
+   --  TEST 15 — Terminal frame render (Mint stack bug guard)
+   --  Clean frames must be ESC-free, fixed width, and tip-at-top.
+   --  A second render must replace the first (overwrite semantics in memory),
+   --  not concatenate — that is the bug users saw when ANSI home was ignored.
+   Put_Line ("TEST 15 — Terminal Render_Frame (no ESC / tip / overwrite)");
+   declare
+      use Rule_30.Terminal;
+      Gens : constant Positive := 5;
+      Rows : constant Positive := Gens + 1;
+      Screen : Board (1 .. Rows, Cell_Col) := [others => [others => 0]];
+      Current : State_Array (1 .. Width) := [others => 0];
+      F0, F1, F2 : String (1 .. Frame_Line_Count (Rows) * (Frame_Width + 1));
+      L0, L1, L2 : Natural;
+
+      procedure Store (G : Natural; Grid : State_Array) is
+      begin
+         for C in Cell_Col loop
+            Screen (G + 1, C) := Grid (C);
+         end loop;
+      end Store;
+
+      function First_Board_Line (S : String) return String is
+         I : Natural := S'First;
+      begin
+         while I <= S'Last and then S (I) /= ASCII.LF loop
+            I := I + 1;
+         end loop;
+         return S (S'First .. I - 1);
+      end First_Board_Line;
+   begin
+      Current (Width / 2) := 1;
+      Store (0, Current);
+      declare
+         S : constant String := Render_Frame (Screen, 0, Gens, Rows);
+      begin
+         L0 := S'Length;
+         F0 (1 .. L0) := S;
+         Check ("15.1 gen0 frame has no ESC", not Contains_ESC (S));
+         Check ("15.2 gen0 line count = board+status",
+                Count_Lines (S) = Frame_Line_Count (Rows));
+         Check ("15.3 gen0 every line width 50",
+                Line_Width_OK (S, Frame_Width));
+         declare
+            Tip : constant String := First_Board_Line (S);
+            Hashes : Natural := 0;
+         begin
+            for C of Tip loop
+               if C = '#' then
+                  Hashes := Hashes + 1;
+               end if;
+            end loop;
+            Check ("15.4 gen0 tip is single center hash",
+                   Hashes = 1 and then Tip (Width / 2) = '#');
+         end;
+      end;
+
+      for Step in 1 .. Gens loop
+         Evolve_Fixed_Zero (Current);
+         Store (Step, Current);
+      end loop;
+      declare
+         S : constant String := Render_Frame (Screen, Gens, Gens, Rows);
+      begin
+         L1 := S'Length;
+         F1 (1 .. L1) := S;
+         Check ("15.5 final frame has no ESC", not Contains_ESC (S));
+         Check ("15.6 final line count stable",
+                Count_Lines (S) = Frame_Line_Count (Rows));
+         Check ("15.7 final width 50", Line_Width_OK (S, Frame_Width));
+         Check ("15.8 tip still present after evolve",
+                First_Board_Line (S) (Width / 2) = '#');
+      end;
+
+      --  Overwrite semantics: rendering gen 0 again into a fresh string must
+      --  equal the earlier gen0 frame, and must NOT be F0 & F1 concatenated.
+      declare
+         Screen0 : Board (1 .. Rows, Cell_Col) := [others => [others => 0]];
+         Seed : State_Array (1 .. Width) := [others => 0];
+      begin
+         Seed (Width / 2) := 1;
+         for C in Cell_Col loop
+            Screen0 (1, C) := Seed (C);
+         end loop;
+         declare
+            S : constant String := Render_Frame (Screen0, 0, Gens, Rows);
+         begin
+            L2 := S'Length;
+            F2 (1 .. L2) := S;
+            Check ("15.9 re-render gen0 equals first gen0 (overwrite)",
+                   L2 = L0 and then F2 (1 .. L2) = F0 (1 .. L0));
+            Check ("15.10 final /= gen0 (evolution changed board)",
+                   L1 = L0 and then F1 (1 .. L1) /= F0 (1 .. L0));
+            declare
+               Stacked : constant String := F0 (1 .. L0) & F1 (1 .. L1);
+            begin
+               Check ("15.11 stacked dump has more lines than one frame",
+                      Count_Lines (Stacked) = 2 * Frame_Line_Count (Rows));
+               Check ("15.12 single frame is not a stacked dump",
+                      Count_Lines (F1 (1 .. L1))
+                        /= Count_Lines (Stacked));
+            end;
          end;
       end;
    end;

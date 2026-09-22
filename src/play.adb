@@ -1,169 +1,149 @@
---  Terminal Rule 30: BW top-seed spacetime + # message box.
---  Redraw: home cursor, paint the whole frame with spaces, then draw
---  (works on Linux Mint terminals that ignore or mishandle ESC[2J).
+--  Terminal Rule 30 (BW top-seed spacetime).
+--  Default: compute all gens, print ONE clean frame (no ANSI) — fixes Mint
+--  terminals that ignore ESC[H]/ESC[2J and otherwise stack scrolled frames.
+--  Optional: play [N] --live  for ANSI in-place animation when the TTY honors it.
 
 pragma Ada_2022;
 
-with Ada.Text_IO;          use Ada.Text_IO;
-with Ada.Command_Line;     use Ada.Command_Line;
+with Ada.Text_IO;       use Ada.Text_IO;
+with Ada.Command_Line;  use Ada.Command_Line;
 with Ada.Calendar;
-with Ada.Strings.Fixed;
-with Rule_30;              use Rule_30;
+with Rule_30;           use Rule_30;
+with Rule_30.Terminal;  use Rule_30.Terminal;
 
 procedure Play is
-   Width           : constant Positive := 50;
-   Default_Gens    : constant Positive := 50;
-   Max_Gens        : constant Positive := 200;
-   Msg_Inner_Width : constant Positive := 48;
-   Frame_Width     : constant Positive := 50;
-   --  Board rows + 1 border + 2 msg + 1 border
-   Status_Lines    : constant Positive := 4;
+   Live : Boolean := False;
+   Gens_Arg : Natural := 0;
 
-   subtype Col is Positive range 1 .. Width;
-
-   function Trim_Nat (N : Natural) return String is
-     (Ada.Strings.Fixed.Trim (N'Image, Ada.Strings.Left));
-
-   function Parse_Generations return Positive is
-      N : Integer;
+   procedure Parse_Args is
    begin
-      if Argument_Count < 1 then
-         return Default_Gens;
-      end if;
-      begin
-         N := Integer'Value (Argument (1));
-      exception
-         when others =>
-            Put_Line ("usage: play [generations]   (1 .."
-                      & Max_Gens'Image & ", default"
-                      & Default_Gens'Image & ")");
-            raise;
-      end;
-      if N < 1 then
-         return 1;
-      elsif N > Max_Gens then
-         return Max_Gens;
-      else
-         return Positive (N);
-      end if;
-   end Parse_Generations;
-
-   Generations : constant Positive := Parse_Generations;
-   Board_Rows  : constant Positive := Generations + 1;
-   Frame_Lines : constant Positive := Board_Rows + Status_Lines;
-
-   type Board is array (Positive range <>, Col range <>) of Bit;
-
-   Screen  : Board (1 .. Board_Rows, Col) := [others => [others => 0]];
-   Current : State_Array (1 .. Width) := [others => 0];
-   Gen     : Natural := 0;
-
-   Blank_Line : constant String (1 .. Frame_Width) := [others => ' '];
-
-   function Pad_Inner (S : String) return String is
-      T : String (1 .. Msg_Inner_Width) := [others => ' '];
-      N : constant Natural := Natural'Min (S'Length, Msg_Inner_Width);
-   begin
-      if N > 0 then
-         T (1 .. N) := S (S'First .. S'First + N - 1);
-      end if;
-      return T;
-   end Pad_Inner;
-
-   procedure Cursor_Home is
-   begin
-      Put (ASCII.ESC & "[H");
-   end Cursor_Home;
-
-   procedure Wipe_Frame is
-   begin
-      --  Overwrite the previous frame with spaces so leftover glyphs vanish
-      --  even when the terminal does not honor clear-screen (Mint/CJK etc.).
-      Cursor_Home;
-      for I in 1 .. Frame_Lines loop
-         Put (Blank_Line);
-         New_Line;
-      end loop;
-      Cursor_Home;
-   end Wipe_Frame;
-
-   procedure Put_Border_Row is
-   begin
-      Put_Line (Ada.Strings.Fixed."*" (Frame_Width, '#'));
-   end Put_Border_Row;
-
-   procedure Put_Msg_Line (S : String) is
-   begin
-      Put ('#');
-      Put (Pad_Inner (S));
-      Put_Line ("#");
-   end Put_Msg_Line;
-
-   procedure Store_Gen (G : Natural; Grid : State_Array) is
-      R : constant Positive := G + 1;
-   begin
-      for C in Col loop
-         Screen (R, C) := Grid (C);
-      end loop;
-   end Store_Gen;
-
-   procedure Draw is
-   begin
-      Wipe_Frame;
-      for R in 1 .. Board_Rows loop
-         for C in Col loop
-            if Screen (R, C) = 1 then
-               Put ('#');
+      for I in 1 .. Argument_Count loop
+         declare
+            A : constant String := Argument (I);
+            N : Integer;
+         begin
+            if A = "--live" or else A = "-l" then
+               Live := True;
+            elsif A = "--help" or else A = "-h" then
+               Put_Line ("usage: play [generations] [--live]");
+               Put_Line ("  generations  1 .." & Max_Gens'Image
+                         & "  (default" & Default_Gens'Image & ")");
+               Put_Line ("  --live       ANSI in-place animation (needs a TTY");
+               Put_Line ("               that honors cursor home / clear)");
+               Put_Line ("  default      print one final frame only (Mint-safe)");
+               raise Program_Error;
             else
-               Put (' ');
+               begin
+                  N := Integer'Value (A);
+                  if N < 1 then
+                     Gens_Arg := 1;
+                  elsif N > Max_Gens then
+                     Gens_Arg := Max_Gens;
+                  else
+                     Gens_Arg := Natural (N);
+                  end if;
+               exception
+                  when Constraint_Error =>
+                     Put_Line ("unknown argument: " & A);
+                     raise;
+               end;
             end if;
-         end loop;
-         New_Line;
+         end;
       end loop;
-      Put_Border_Row;
-      Put_Msg_Line
-        ("CURRENT GEN  " & Trim_Nat (Gen) & " / " & Trim_Nat (Generations)
-         & "          RULE  30");
-      Put_Msg_Line
-        ("BW  play [N]  N=1.." & Trim_Nat (Max_Gens)
-         & "  default=" & Trim_Nat (Default_Gens));
-      Put_Border_Row;
-      Flush;
-   end Draw;
+   end Parse_Args;
 
-   procedure Pause_Brief is
-      use Ada.Calendar;
-      T0 : constant Time := Clock;
-   begin
-      while Clock - T0 < 0.05 loop
-         null;
-      end loop;
-   end Pause_Brief;
-
+   Generations : Positive;
+   Board_Rows  : Positive;
 begin
-   --  Hide cursor for cleaner animation; show again on exit.
-   Put (ASCII.ESC & "[?25l");
-   Flush;
+   begin
+      Parse_Args;
+   exception
+      when Program_Error =>
+         return;  -- --help
+   end;
 
-   Current (Width / 2) := 1;
-   Gen := 0;
-   Store_Gen (0, Current);
-   Draw;
-   Pause_Brief;
+   if Gens_Arg = 0 then
+      Generations := Default_Gens;
+   else
+      Generations := Positive (Gens_Arg);
+   end if;
+   Board_Rows := Generations + 1;
 
-   for Step in 1 .. Generations loop
-      Evolve_Fixed_Zero (Current);
-      Gen := Step;
-      Store_Gen (Step, Current);
-      Draw;
-      Pause_Brief;
-   end loop;
+   declare
+      Screen  : Board (1 .. Board_Rows, Cell_Col) := [others => [others => 0]];
+      Current : State_Array (1 .. Width) := [others => 0];
+      Gen     : Natural := 0;
 
-   Put (ASCII.ESC & "[?25h");
-   New_Line;
-   Put_Line ("done — " & Trim_Nat (Generations) & " generations.");
-exception
-   when others =>
-      Put (ASCII.ESC & "[?25h");
-      raise;
+      procedure Store_Gen (G : Natural; Grid : State_Array) is
+         R : constant Positive := G + 1;
+      begin
+         for C in Cell_Col loop
+            Screen (R, C) := Grid (C);
+         end loop;
+      end Store_Gen;
+
+      procedure Put_Frame (S : String) is
+      begin
+         Put (S);
+         Flush;
+      end Put_Frame;
+
+      procedure Pause_Brief is
+         use Ada.Calendar;
+         T0 : constant Time := Clock;
+      begin
+         while Clock - T0 < 0.05 loop
+            null;
+         end loop;
+      end Pause_Brief;
+
+      procedure Draw_Live is
+         S : constant String :=
+           Render_Frame (Screen, Gen, Generations, Board_Rows);
+      begin
+         --  Full clear + home, then clean frame (no ESC inside S).
+         Put (ASCII.ESC & "[2J" & ASCII.ESC & "[H");
+         Put_Frame (S);
+      end Draw_Live;
+   begin
+      Current (Width / 2) := 1;
+      Gen := 0;
+      Store_Gen (0, Current);
+
+      if Live then
+         Put (ASCII.ESC & "[?25l");
+         Flush;
+         Draw_Live;
+         Pause_Brief;
+         for Step in 1 .. Generations loop
+            Evolve_Fixed_Zero (Current);
+            Gen := Step;
+            Store_Gen (Step, Current);
+            Draw_Live;
+            Pause_Brief;
+         end loop;
+         Put (ASCII.ESC & "[?25h");
+         New_Line;
+         Put_Line ("done —" & Generations'Image & " generations (--live).");
+      else
+         --  Mint-safe path: evolve fully, emit exactly one frame, no ANSI.
+         for Step in 1 .. Generations loop
+            Evolve_Fixed_Zero (Current);
+            Gen := Step;
+            Store_Gen (Step, Current);
+         end loop;
+         declare
+            S : constant String :=
+              Render_Frame (Screen, Gen, Generations, Board_Rows);
+         begin
+            if Contains_ESC (S) then
+               Put_Line ("internal error: clean frame contains ESC");
+               raise Program_Error;
+            end if;
+            Put_Frame (S);
+         end;
+         Put_Line ("done —" & Generations'Image
+                   & " generations (single frame; use --live to animate).");
+      end if;
+   end;
 end Play;
