@@ -16,19 +16,31 @@ Makefile          make test | make play
 
 ## Terminal (`make play`)
 
-Classic **top-seed spacetime** (like the usual Rule 30 triangle):
+Classic **top-seed spacetime** (Rule 30 triangle):
 
-- Row 1 = generation 0 (single center seed — the tip never scrolls away)
+- Row 1 = generation 0 (single center seed — tip never scrolls away)
 - Later generations grow **downward**
-- **50 columns**, **51 rows** (gens 0..50), **BW** only (`#` live, space empty)
-- No color, no scale/slider
+- **50 columns**, **BW** only (`#` live, space empty)
+- No cell colors, no scale/slider
 
-Message box under the board (outer width 50, inner text 48):
+**Redraw (Linux Mint):** each frame homes the cursor, overwrites the whole
+frame with spaces, then paints again — so glyphs do not stack when the
+terminal ignores clear-screen.
+
+**Generations** (default 50, max 200):
+
+```bash
+make play           # 50 gens
+make play GEN=80    # 80 gens
+./bin/play 30       # same
+```
+
+Message box (outer width 50, inner text 48):
 
 ```
 ##################################################
 #CURRENT GEN  12 / 50          RULE  30          #
-#BW  fixed-zero edges  center seed  make play    #
+#BW  play [N]  N=1..200  default=50              #
 ##################################################
 ```
 
@@ -46,8 +58,9 @@ Empty grids raise `Invalid_Grid`.
 ## Build
 
 ```bash
-make test   # unit tests
-make play   # terminal demo (alias: make run)
+make test
+make play
+make play GEN=80
 ```
 
 ## License
