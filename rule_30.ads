@@ -26,8 +26,7 @@ package Rule_30 is
    --  The automaton is updated in-place representing a synchronous state jump.
    --  ========================================================================
    procedure Evolve_Fixed_Zero (Grid : in out State_Array)
-     with Global => null,
-          Pre => Grid'Length > 0;
+     with Global => null;
 
    --  ========================================================================
    --  Variant 2: Evolve with Periodic Boundary (Wrap-around / Synchronous)
@@ -36,8 +35,7 @@ package Rule_30 is
    --  leftmost cell.
    --  ========================================================================
    procedure Evolve_Periodic (Grid : in out State_Array)
-     with Global => null,
-          Pre => Grid'Length > 0;
+     with Global => null;
 
    --  ========================================================================
    --  Variant 3: Evolve with Expanding Boundaries (Infinite Zero Background)
@@ -47,9 +45,6 @@ package Rule_30 is
    --  ========================================================================
    function Evolve_Expanding (Grid : State_Array) return State_Array
      with Global => null,
-          Pre => Grid'Length > 0 
-                 and then Grid'First > Integer'First 
-                 and then Grid'Last < Integer'Last,
           Post => Evolve_Expanding'Result'Length = Grid'Length + 2;
 
    --  ========================================================================
@@ -60,7 +55,6 @@ package Rule_30 is
    procedure Evolve_And_Extract_Center
      (Grid       : in out State_Array;
       Center_Bit : out Bit)
-     with Global => null,
-          Pre => Grid'Length > 0 and then Grid'Length mod 2 /= 0;
+     with Global => null;
 
 end Rule_30;
