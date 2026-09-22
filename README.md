@@ -9,27 +9,28 @@ Cells are `Bit is mod 2`. Neighborhood `(P, Q, R)` updates as `P XOR (Q OR R)` (
 ```
 src/rule_30.ads   public API
 src/rule_30.adb   evolve variants
-src/play.adb      terminal demo (20×50 board + message box)
+src/play.adb      terminal demo (BW spacetime + message box)
 tests/tests.adb   unit tests
 Makefile          make test | make play
 ```
 
 ## Terminal (`make play`)
 
-Fills a plain terminal with:
+Classic **top-seed spacetime** (like the usual Rule 30 triangle):
 
-- **20 rows × 50 characters** — scrolling view of the last generations (`#` = live, space = empty)
-- **Message box** under the board (outer width 50, inner text 48):
+- Row 1 = generation 0 (single center seed — the tip never scrolls away)
+- Later generations grow **downward**
+- **50 columns**, **51 rows** (gens 0..50), **BW** only (`#` live, space empty)
+- No color, no scale/slider
+
+Message box under the board (outer width 50, inner text 48):
 
 ```
 ##################################################
-#48 characters of status text...................#
-#48 characters of help text.....................#
-#48 characters of footer........................#
+#CURRENT GEN  12 / 50          RULE  30          #
+#BW  fixed-zero edges  center seed  make play    #
 ##################################################
 ```
-
-Default run: center seed, fixed-zero edges, **60 generations**, ~80 ms per step.
 
 ## API (`src/rule_30.ads`)
 
