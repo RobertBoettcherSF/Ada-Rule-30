@@ -33,6 +33,16 @@ make play GEN=80       # 80 gens
 **Optional animation** (only if your TTY honors clear/home):
 
 ```bash
+make live
+make live GEN=40
+make play LIVE=1
+./bin/play 40 --live
+```
+
+Do **not** write `make run --live` — GNU make treats `--live` as its own
+option and never starts `play`.
+
+```bash
 make play LIVE=1
 make play GEN=40 LIVE=1
 ./bin/play 40 --live

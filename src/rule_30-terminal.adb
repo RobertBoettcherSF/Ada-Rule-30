@@ -53,7 +53,7 @@ package body Rule_30.Terminal is
       procedure Append_Line (Piece : String) is
       begin
          Append (Piece);
-         Append ((1 => ASCII.LF));
+         Append ([1 => ASCII.LF]);
       end Append_Line;
    begin
       for R in 1 .. Board_Rows loop
