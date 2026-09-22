@@ -3,7 +3,7 @@ FLAGS   := -gnatwa -gnat2022
 OBJ_DIR := obj
 BIN_DIR := bin
 
-.PHONY: all test clean
+.PHONY: all test run clean
 
 all: $(BIN_DIR)/tests
 
@@ -13,6 +13,9 @@ $(BIN_DIR)/tests: *.ads *.adb *.gpr
 
 test: all
 	@echo "Running tests..."
+	@$(BIN_DIR)/tests
+
+run: all
 	@$(BIN_DIR)/tests
 
 clean:
