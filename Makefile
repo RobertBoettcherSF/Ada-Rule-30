@@ -8,12 +8,12 @@ BIN_DIR := bin
 all: $(BIN_DIR)/tests
 
 $(BIN_DIR)/tests: *.ads *.adb *.gpr
-	mkdir -p $(OBJ_DIR)$(BIN_DIR)
-	$(GNAT)$(FLAGS) -Prule_30.gpr
+	mkdir -p $(OBJ_DIR) $(BIN_DIR)
+	$(GNAT) $(FLAGS) -Prule_30.gpr
 
 test: all
 	@echo "Running tests..."
 	@$(BIN_DIR)/tests
 
 clean:
-	rm -rf $(OBJ_DIR)$(BIN_DIR)
+	rm -rf $(OBJ_DIR) $(BIN_DIR)
