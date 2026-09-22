@@ -4,10 +4,7 @@ package body Rule_30 is
    --  Apply_Rule
    ----------------------------------------------------------------------
    function Apply_Rule (Left, Center, Right : Bit) return Bit is
-   begin
-      --  Applying the logical reduction of Wolfram's Rule 30 (00011110)
-      return Left xor (Center or Right);
-   end Apply_Rule;
+     (Left xor (Center or Right));
 
    ----------------------------------------------------------------------
    --  Evolve_Fixed_Zero
@@ -23,21 +20,9 @@ package body Rule_30 is
       end if;
 
       for I in Grid'Range loop
-         --  Resolve left neighbor
-         if I = Grid'First then
-            Left := 0;
-         else
-            Left := Old_Grid (I - 1);
-         end if;
-         
+         Left   := (if I = Grid'First then 0 else Old_Grid (I - 1));
          Center := Old_Grid (I);
-         
-         --  Resolve right neighbor
-         if I = Grid'Last then
-            Right := 0;
-         else
-            Right := Old_Grid (I + 1);
-         end if;
+         Right  := (if I = Grid'Last  then 0 else Old_Grid (I + 1));
          
          Grid (I) := Apply_Rule (Left, Center, Right);
       end loop;
@@ -54,31 +39,10 @@ package body Rule_30 is
          raise Invalid_Grid;
       end if;
 
-      --  If grid consists of exactly one cell, its neighbors are itself.
-      if Grid'Length = 1 then
-         Left   := Old_Grid (Grid'First);
-         Center := Old_Grid (Grid'First);
-         Right  := Old_Grid (Grid'First);
-         Grid (Grid'First) := Apply_Rule (Left, Center, Right);
-         return;
-      end if;
-
       for I in Grid'Range loop
-         --  Resolve wrapped left neighbor
-         if I = Grid'First then
-            Left := Old_Grid (Grid'Last);
-         else
-            Left := Old_Grid (I - 1);
-         end if;
-         
+         Left   := (if I = Grid'First then Old_Grid (Grid'Last)  else Old_Grid (I - 1));
          Center := Old_Grid (I);
-         
-         --  Resolve wrapped right neighbor
-         if I = Grid'Last then
-            Right := Old_Grid (Grid'First);
-         else
-            Right := Old_Grid (I + 1);
-         end if;
+         Right  := (if I = Grid'Last  then Old_Grid (Grid'First) else Old_Grid (I + 1));
          
          Grid (I) := Apply_Rule (Left, Center, Right);
       end loop;
@@ -99,26 +63,9 @@ package body Rule_30 is
          Left, Center, Right : Bit;
       begin
          for I in Result'Range loop
-            --  Extrapolate left state against infinite background bounds
-            if I <= Grid'First then
-               Left := 0;
-            else
-               Left := Old_Grid (I - 1);
-            end if;
-
-            --  Extrapolate center state against infinite background bounds
-            if I < Grid'First or else I > Grid'Last then
-               Center := 0;
-            else
-               Center := Old_Grid (I);
-            end if;
-
-            --  Extrapolate right state against infinite background bounds
-            if I >= Grid'Last then
-               Right := 0;
-            else
-               Right := Old_Grid (I + 1);
-            end if;
+            Left   := (if I <= Grid'First     then 0 else Old_Grid (I - 1));
+            Center := (if I in Grid'Range     then Old_Grid (I) else 0);
+            Right  := (if I >= Grid'Last      then 0 else Old_Grid (I + 1));
 
             Result (I) := Apply_Rule (Left, Center, Right);
          end loop;
