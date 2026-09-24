@@ -1,36 +1,19 @@
 --  Terminal Rule 30 (BW top-seed spacetime).
---  Default: one clean final frame (no ANSI) — Mint-safe.
---  --live: clear(1) before each frame, then print a clean Render_Frame.
---  ANSI ESC clear/home is unreliable on some Linux Mint terminals.
+--  Default: live animation via Terminal_UI.Clear_Screen each frame.
+--  --once: one clean final frame (no clear).
 
 pragma Ada_2022;
 
 with Ada.Text_IO;       use Ada.Text_IO;
 with Ada.Command_Line;  use Ada.Command_Line;
-with Ada.Calendar;
-with Interfaces.C; use Interfaces.C;
 with Rule_30;           use Rule_30;
 with Rule_30.Terminal;  use Rule_30.Terminal;
+with Terminal_UI;
 
 procedure Play is
    Live      : Boolean := True;  -- default: animate
    Show_Help : Boolean := False;
    Gens_Arg  : Natural := 0;
-
-   function C_System (Command : Interfaces.C.Char_Array) return Interfaces.C.int
-     with Import, Convention => C, External_Name => "system";
-
-   procedure Clear_Terminal is
-      RC : Interfaces.C.int;
-   begin
-      --  Prefer the real clear(1); ESC[2J is ignored on some Mint TTYs.
-      RC := C_System (Interfaces.C.To_C ("clear 2>/dev/null"));
-      if RC /= 0 then
-         --  Last-ditch ANSI; still may be a no-op on broken TTYs.
-         Put (ASCII.ESC & "[2J" & ASCII.ESC & "[H");
-         Flush;
-      end if;
-   end Clear_Terminal;
 
    procedure Parse_Args is
    begin
@@ -41,6 +24,8 @@ procedure Play is
          begin
             if A = "--live" or else A = "-l" then
                Live := True;
+            elsif A = "--once" or else A = "-o" then
+               Live := False;
             elsif A = "--help" or else A = "-h" then
                Show_Help := True;
             else
@@ -56,7 +41,7 @@ procedure Play is
                exception
                   when Constraint_Error =>
                      Put_Line ("unknown argument: " & A);
-                     Put_Line ("usage: play [generations] [--live]");
+                     Put_Line ("usage: play [generations] [--live|--once]");
                      raise;
                end;
             end if;
@@ -69,7 +54,7 @@ procedure Play is
 begin
    Parse_Args;
    if Show_Help then
-      Put_Line ("usage: play [generations] [--live]");
+      Put_Line ("usage: play [generations] [--live|--once]");
       Put_Line ("  generations  1 .." & Max_Gens'Image
                 & "  (default" & Default_Gens'Image & ")");
       Put_Line ("  (default)    --live at" & Default_Gens'Image & " gens (clear each frame)");
@@ -99,27 +84,12 @@ begin
          end loop;
       end Store_Gen;
 
-      procedure Put_Frame (S : String) is
-      begin
-         Put (S);
-         Flush;
-      end Put_Frame;
-
-      procedure Pause_Brief is
-         use Ada.Calendar;
-         T0 : constant Time := Clock;
-      begin
-         while Clock - T0 < 0.12 loop
-            null;
-         end loop;
-      end Pause_Brief;
-
       procedure Draw_Live is
          S : constant String :=
            Render_Frame (Screen, Gen, Generations, Board_Rows);
       begin
-         Clear_Terminal;
-         Put_Frame (S);
+         Terminal_UI.Clear_Screen;
+         Terminal_UI.Put_Frame (S);
       end Draw_Live;
    begin
       Current (Width / 2) := 1;
@@ -128,13 +98,13 @@ begin
 
       if Live then
          Draw_Live;
-         Pause_Brief;
+         Terminal_UI.Pause_Seconds (0.12);
          for Step in 1 .. Generations loop
             Evolve_Fixed_Zero (Current);
             Gen := Step;
             Store_Gen (Step, Current);
             Draw_Live;
-            Pause_Brief;
+            Terminal_UI.Pause_Seconds (0.12);
          end loop;
          New_Line;
          Put_Line ("done —" & Generations'Image
@@ -153,7 +123,7 @@ begin
                Put_Line ("internal error: clean frame contains ESC");
                raise Program_Error;
             end if;
-            Put_Frame (S);
+            Terminal_UI.Put_Frame (S);
          end;
          Put_Line ("done —" & Generations'Image
                    & " generations (--once single frame).");

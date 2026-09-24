@@ -2,6 +2,7 @@ GNAT    := gnatmake
 FLAGS   := -gnatwa -gnat2022 -gnata
 OBJ_DIR := obj
 BIN_DIR := bin
+TUI_INC := -Ithird_party/terminal_ui
 # Generations: make play GEN=40  (default 16)
 GEN     ?=
 # ONCE=1 → single frame, no animation
@@ -11,13 +12,13 @@ ONCE    ?=
 
 all: $(BIN_DIR)/tests $(BIN_DIR)/play
 
-$(BIN_DIR)/tests: src/*.ads src/*.adb tests/tests.adb
+$(BIN_DIR)/tests: src/*.ads src/*.adb tests/tests.adb third_party/terminal_ui/*.ads third_party/terminal_ui/*.adb
 	mkdir -p $(OBJ_DIR) $(BIN_DIR)
-	$(GNAT) $(FLAGS) -D $(OBJ_DIR) -Isrc tests/tests.adb -o $(BIN_DIR)/tests
+	$(GNAT) $(FLAGS) -D $(OBJ_DIR) -Isrc $(TUI_INC) tests/tests.adb -o $(BIN_DIR)/tests
 
-$(BIN_DIR)/play: src/*.ads src/*.adb src/play.adb
+$(BIN_DIR)/play: src/*.ads src/*.adb src/play.adb third_party/terminal_ui/*.ads third_party/terminal_ui/*.adb
 	mkdir -p $(OBJ_DIR) $(BIN_DIR)
-	$(GNAT) $(FLAGS) -D $(OBJ_DIR) -Isrc src/play.adb -o $(BIN_DIR)/play
+	$(GNAT) $(FLAGS) -D $(OBJ_DIR) -Isrc $(TUI_INC) src/play.adb -o $(BIN_DIR)/play
 
 test: $(BIN_DIR)/tests
 	$(BIN_DIR)/tests

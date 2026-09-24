@@ -9,12 +9,15 @@ Cells are `Bit is mod 2`. Neighborhood `(P, Q, R)` updates as `P XOR (Q OR R)` (
 ```
 src/rule_30.ads            public API
 src/rule_30.adb            evolve variants
-src/rule_30-terminal.ads   clean frame renderer (no ANSI)
+src/rule_30-terminal.ads   Rule-30 frame renderer (uses Terminal_UI)
 src/rule_30-terminal.adb
 src/play.adb               terminal demo
+third_party/terminal_ui/   vendored Ada-Terminal-UI src/
 tests/tests.adb            unit tests (incl. frame overwrite guards)
-Makefile                   make test | make play
+Makefile                   make test | make play | make once
 ```
+
+TUI from [Ada-Terminal-UI](https://github.com/RobertBoettcherSF/Ada-Terminal-UI); update by copying `src` when upstream changes.
 
 ## Terminal (`make play`)
 

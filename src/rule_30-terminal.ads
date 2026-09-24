@@ -1,4 +1,4 @@
---  Pure frame rendering for the play demo (no ANSI). Testable without a TTY.
+--  Rule-30 frame rendering via Terminal_UI (no ANSI in frame text).
 
 package Rule_30.Terminal is
 
